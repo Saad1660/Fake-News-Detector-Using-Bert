@@ -4,7 +4,10 @@ from transformers import BertTokenizer, BertForSequenceClassification
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
+# ✅ Fix: ensure MODEL_PATH points to the folder containing tokenizer files
 MODEL_PATH = "bert_saved_model"
+
+# Load tokenizer and model from folder
 tokenizer = BertTokenizer.from_pretrained(MODEL_PATH)
 model = BertForSequenceClassification.from_pretrained(MODEL_PATH)
 model.eval()
