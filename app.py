@@ -108,3 +108,4 @@ if uploaded_file:
     if results_df is not None:
         csv = results_df.to_csv(index=False).encode("utf-8")
         st.download_button("⬇️ Download Predictions as CSV", data=csv, file_name="predictions.csv", mime="text/csv")
+
