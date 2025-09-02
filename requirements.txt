@@ -1,6 +1,6 @@
-torch 
-transformers 
-scikit-learn 
-pandas 
-matplotlib 
-streamlit 
+streamlit
+torch
+transformers
+gdown
+pandas
+scikit-learn
