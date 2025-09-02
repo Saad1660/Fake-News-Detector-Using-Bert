@@ -7,20 +7,32 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 # ===============================
-# ⚡ Auto-download BERT model folder
+# ⚡ Model folder settings
 # ===============================
-MODEL_DIR = "bert_saved_model"  # keep your original folder name
+MODEL_DIR = "bert_saved_model"
 FOLDER_URL = "https://drive.google.com/drive/folders/1FrOAKgTjQuxXCylSKUiGwfcjF2Hp71ZU?usp=sharing"
 
-if not os.path.exists(MODEL_DIR):
-    st.info("Model folder not found locally. Downloading from Google Drive...")
+# ===============================
+# ⚡ Ensure model folder exists and is complete
+# ===============================
+def check_model_folder(folder_path):
+    """Check if the folder exists and has required files."""
+    required_files = ["pytorch_model.bin", "config.json", "vocab.txt"]  # add other files if needed
+    if not os.path.exists(folder_path):
+        return False
+    files_present = os.listdir(folder_path)
+    for f in required_files:
+        if f not in files_present:
+            return False
+    return True
+
+if not check_model_folder(MODEL_DIR):
+    st.info("Downloading BERT model folder from Google Drive...")
     gdown.download_folder(url=FOLDER_URL, output=MODEL_DIR, use_cookies=False)
-    st.success("Model folder downloaded! ✅")
-else:
-    st.info("Model folder already exists locally. ✅")
+    st.success("✅ Model folder downloaded successfully!")
 
 # ===============================
-# ⚡ Load BERT model
+# ⚡ Load tokenizer and model
 # ===============================
 tokenizer = BertTokenizer.from_pretrained(MODEL_DIR)
 model = BertForSequenceClassification.from_pretrained(MODEL_DIR)
