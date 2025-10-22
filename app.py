@@ -10,6 +10,9 @@ import numpy as np
 MODEL_DIR = "bert_saved_model"
 FOLDER_URL = "https://drive.google.com/drive/folders/1FrOAKgTjQuxXCylSKUiGwfcjF2Hp71ZU?usp=sharing"
 
+# Consistent label mapping
+LABELS = {0: "Fake", 1: "Real"}  # Ensure this matches your model training
+
 @st.cache_resource
 def load_model():
     try:
@@ -107,20 +110,19 @@ if st.button("Analyze Text", type="primary"):
                     prediction = torch.argmax(outputs.logits, dim=1).item()
                     confidence = torch.max(probs).item()
                 
-                st.write(f"Debug - Raw prediction: {prediction}, Logits: {outputs.logits.tolist()}, Probs: {probs.tolist()}")
+                # Debug line showing human-readable label
+                pred_label = LABELS[prediction]
+                st.write(
+                    f"Debug - Predicted Label: {pred_label} "
+                    f"(Raw: {prediction}), Logits: {outputs.logits.tolist()}, Probs: {probs.tolist()}"
+                )
                 
-                if prediction == 0:
-                    st.markdown(
-                        f'<div class="result-box fake">FAKE NEWS DETECTED<br>'
-                        f'<span class="confidence">Confidence: {confidence*100:.1f}%</span></div>', 
-                        unsafe_allow_html=True
-                    )
-                else:
-                    st.markdown(
-                        f'<div class="result-box real">This looks REAL<br>'
-                        f'<span class="confidence">Confidence: {confidence*100:.1f}%</span></div>', 
-                        unsafe_allow_html=True
-                    )
+                # Consistent label display
+                st.markdown(
+                    f'<div class="result-box {pred_label.lower()}">{pred_label.upper()} DETECTED<br>'
+                    f'<span class="confidence">Confidence: {confidence*100:.1f}%</span></div>',
+                    unsafe_allow_html=True
+                )
             except Exception as e:
                 st.error(f"Error during prediction: {str(e)}")
     else:
@@ -147,14 +149,15 @@ if uploaded_file:
                     
                     preds, confs = predict_batch(texts, tokenizer, model, batch_size=16)
                     
-                    df["Prediction"] = ["Fake" if p == 1 else "Real" for p in preds]
+                    # Consistent label mapping
+                    df["Prediction"] = [LABELS[p] for p in preds]
                     df["Confidence"] = [f"{c*100:.1f}%" for c in confs]
                     results_df = df
                     
                     st.success(f"Processed {len(df)} articles!")
                     st.dataframe(df, use_container_width=True)
                     
-                    fake_count = sum(1 for p in preds if p == 1)
+                    fake_count = sum(1 for p in preds if LABELS[p] == "Fake")
                     real_count = len(preds) - fake_count
                     
                     col1, col2, col3 = st.columns(3)
@@ -181,10 +184,11 @@ if uploaded_file:
                         col3.metric("Recall", f"{rec*100:.2f}%")
                         col4.metric("F1-Score", f"{f1*100:.2f}%")
                         
+                        # Update confusion matrix labels
                         cm_df = pd.DataFrame(
                             cm,
-                            index=["True Real (0)", "True Fake (1)"],
-                            columns=["Pred Real (0)", "Pred Fake (1)"]
+                            index=[f"True {LABELS[i]} ({i})" for i in range(len(LABELS))],
+                            columns=[f"Pred {LABELS[i]} ({i})" for i in range(len(LABELS))]
                         )
                         st.write("#### Confusion Matrix")
                         st.dataframe(cm_df, use_container_width=True)
@@ -203,7 +207,7 @@ if uploaded_file:
                     for line, pred, conf in zip(lines, preds, confs):
                         results.append({
                             "Text": line[:100] + "..." if len(line) > 100 else line,
-                            "Prediction": "Fake" if pred == 1 else "Real",
+                            "Prediction": LABELS[pred],
                             "Confidence": f"{conf*100:.1f}%"
                         })
                     
