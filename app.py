@@ -107,7 +107,9 @@ if st.button("Analyze Text", type="primary"):
                     prediction = torch.argmax(outputs.logits, dim=1).item()
                     confidence = torch.max(probs).item()
                 
-                if prediction == 1:
+                st.write(f"Debug - Raw prediction: {prediction}, Logits: {outputs.logits.tolist()}, Probs: {probs.tolist()}")
+                
+                if prediction == 0:
                     st.markdown(
                         f'<div class="result-box fake">FAKE NEWS DETECTED<br>'
                         f'<span class="confidence">Confidence: {confidence*100:.1f}%</span></div>', 
